@@ -7,6 +7,8 @@ from safetensors.torch import save_file
 from src.config import TrainConfig
 from src.dataset import ChatterboxDataset, data_collator
 from src.model import resize_and_load_t3_weights, ChatterboxTrainerWrapper
+from src.preprocess_ljspeech import preprocess_dataset_ljspeech
+from src.preprocess_file_based import preprocess_dataset_file_based
 from src.utils import setup_logger
 
 # Chatterbox Imports
@@ -69,6 +71,13 @@ def main():
     tts_engine_new.t3.train()
     for param in tts_engine_new.t3.parameters(): param.requires_grad = True
 
+    logger.info("Initializing Preprocess dataset...")
+    
+    if cfg.ljspeech:
+        preprocess_dataset_ljspeech(cfg, tts_engine_new)
+    else:
+        preprocess_dataset_file_based(cfg, tts_engine_new)
+        
     # 5. DATASET & WRAPPER
     logger.info("Initializing Dataset...")
     train_ds = ChatterboxDataset(cfg)

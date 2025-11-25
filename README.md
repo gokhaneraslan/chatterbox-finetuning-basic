@@ -9,7 +9,7 @@ Specially designed to support **new languages** (like Turkish) that aren't fully
 ## ⚠️ CRITICAL INFORMATION (Please Read)
 
 ### 0. Preprocessing is Mandatory
-This repository uses an **offline preprocessing** strategy to maximize training speed. Before starting the training loop, you **must run** the `preprocess.py` script. This script processes all audio files, extracts speaker embeddings and acoustic tokens, and saves them as `.pt` files. The training script (`train.py`) will **only read** these preprocessed files, not the raw audio.
+This repository uses an **offline preprocessing** strategy to maximize training speed. This script processes all audio files, extracts speaker embeddings and acoustic tokens, and saves them as `.pt` files.
 
 ### 1. Tokenizer and Vocab Size (Most Important)
 Chatterbox uses a grapheme-based (character-level) tokenizer. The `tokenizer.json` file downloaded by `setup.py` includes support for **23 languages** from the original Chatterbox repository, covering most common characters across multiple languages.
@@ -34,27 +34,31 @@ Chatterbox uses a grapheme-based (character-level) tokenizer. The `tokenizer.jso
 
 ```text
 chatterbox-finetune/
-├── pretrained_models/       # setup.py downloads required models here
+├── pretrained_models/                             # setup.py downloads required models here
 │   ├── ve.safetensors
 │   ├── s3gen.safetensors
 │   ├── t3.safetensors
 │   └── tokenizer.json
-├── MyTTSDataset/            # Your custom dataset in LJSpeech format
-│   ├── metadata.csv         # Dataset metadata (file|text|normalized_text)
-│   └── wavs/                # Directory containing WAV files
-├── speaker_reference/       # Speaker reference audio files
-│   └── reference.wav        # Reference audio for voice cloning
+├── MyTTSDataset/                                  # Your custom dataset in LJSpeech format
+│   ├── metadata.csv                               # Dataset metadata (file|text|normalized_text)
+│   └── wavs/                                      # Directory containing WAV files
+├── FileBasedDataset/                              # Your custom dataset in LJSpeech format
+│   ├── 0a0bc5d3-f195-464a-8716-d6e01fd4784f.txt   # Dataset metadata (text)
+│   └── 0a0bc5d3-f195-464a-8716-d6e01fd4784f.wav   # WAV files
+├── speaker_reference/                             # Speaker reference audio files
+│   └── reference.wav                              # Reference audio for voice cloning
 ├── src/
-│   ├── config.py            # All settings and hyperparameters
-│   ├── dataset.py           # Data loading and processing
-│   ├── model.py             # Model weight transfer and training wrapper
-│   └── utils.py             # Logger and VAD utilities
-├── preprocess.py            # [IMPORTANT] Preprocessing script
-├── train.py                 # Main training script
-├── inference.py             # Speech synthesis script (with VAD support)
-├── setup.py                 # Setup script for downloading models
-├── requirements.txt         # Required dependencies
-└── README.md                # This file
+│   ├── config.py                                  # All settings and hyperparameters
+│   ├── dataset.py                                 # Data loading and processing
+│   ├── model.py                                   # Model weight transfer and training wrapper
+|   ├── preprocess_ljspeech.py                     # Preprocessing script
+|   ├── preprocess_file_based.py                   # Preprocessing script
+│   └── utils.py                                   # Logger and VAD utilities
+├── train.py                                       # Main training script
+├── inference.py                                   # Speech synthesis script (with VAD support)
+├── setup.py                                       # Setup script for downloading models
+├── requirements.txt                               # Required dependencies
+└── README.md                                      # This file
 ```
 
 ---
@@ -170,7 +174,7 @@ MyTTSDataset/
 2. Count the total tokens in your JSON file
 3. Update `NEW_VOCAB_SIZE` in both files to match this count
 
-Example for Turkish (2454 tokens):
+Example for Turkish:
 ```python
 # In src/config.py
 NEW_VOCAB_SIZE = 2454  # Must match your tokenizer.json
@@ -191,13 +195,12 @@ LEARNING_RATE = 5e-5
 NUM_EPOCHS = 50
 ```
 
-### Step 3: Preprocessing (CRITICAL STEP) ⚡
-Run this script **once** before training. It converts raw audio/text into tensors and saves them to disk. This speeds up training by **10x-20x** and prevents CPU bottlenecks.
+If your dataset is file-based dataset, set ljspeech = False in the configuration file.
+```python
+# In src/config.py
+ljspeech = False  
 
-```bash
-python preprocess.py
 ```
-*Output:* Check `MyTTSDataset/preprocess/` folder to see generated `.pt` files.
 
 ### 3. Start Training
 ```bash

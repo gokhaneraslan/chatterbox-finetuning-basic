@@ -1,6 +1,5 @@
 import os
 import torch
-import pandas as pd
 from torch.utils.data import Dataset
 from torch.nn.utils.rnn import pad_sequence
 
@@ -15,23 +14,33 @@ class ChatterboxDataset(Dataset):
     
     def __init__(self, config):
         self.cfg = config
-        self.data = pd.read_csv(config.csv_path, sep="|", header=None, quoting=3)
+        self.preprocessed_dir = config.preprocessed_dir
+        
+        # List only files with .pt extension
+        if not os.path.exists(self.preprocessed_dir):
+            raise FileNotFoundError(f"Preprocessing folder not found: {self.preprocessed_dir}.")
+            
+        self.files = [f for f in os.listdir(self.preprocessed_dir) if f.endswith(".pt")]
+        
+        if len(self.files) == 0:
+            raise RuntimeError(f"There are no .pt files in the folder: {self.preprocessed_dir}")
+            
+        logger.info(f"Dataset loaded. Total sample: {len(self.files)}")
+
         self.sot_token = config.start_text_token 
         self.eot_token = config.stop_text_token
 
+
     def __len__(self):
-        return len(self.data)
+        return len(self.files)
 
     def __getitem__(self, idx):
+        
         try:
-            row = self.data.iloc[idx]
-            filename = str(row[0])
-            if not filename.endswith(".wav"): filename += ".wav"
             
-            pt_path = os.path.join(self.cfg.preprocessed_dir, filename.replace(".wav", ".pt"))
+            filename = self.files[idx]
             
-            if not os.path.exists(pt_path):
-                return None
+            pt_path = os.path.join(self.preprocessed_dir, filename)
             
             data = torch.load(pt_path)
             
@@ -55,6 +64,7 @@ class ChatterboxDataset(Dataset):
                 "speaker_emb": data["speaker_emb"],
                 "prompt_tokens": data["prompt_tokens"]
             }
+
 
         except Exception as e:
             logger.error(f"Error loading {filename}: {e}")

@@ -18,6 +18,8 @@ class TrainConfig:
     # Output directory for the finetuned model
     output_dir: str = os.getenv("OUTPUT_DIR", "./chatterbox_output")
 
+    ljspeech = True
+
     # --- Hyperparameters ---
     batch_size: int = 4         # Adjust based on VRAM (2, 4, 8)
     grad_accum: int = 16        # Effective Batch Size = Batch * Accum
