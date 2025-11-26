@@ -89,7 +89,7 @@ scoop install ffmpeg
 **Install Python Dependencies:**
 ```bash
 
-git clone https://github.com/gokhaneraslan/chatterbox-finetuning-basic.git
+git clone https://github.com/gokhaneraslan/chatterbox-finetuning.git
 cd chatterbox-finetuning-basic
 
 pip install -r requirements.txt
